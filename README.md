@@ -6,27 +6,30 @@ El proyecto plantea un sistema de apoyo basado en IA para decisiones del ámbito
 
 ## 📁 Estructura del repositorio
 
-El repositorio se organiza por **Sprints**, manteniendo separados los entregables y el material de desarrollo de cada iteración.https://github.com/EthicsAI-UCM/ReJust/tree/main
+El repositorio se organiza por **Sprints**, manteniendo separados los entregables y el material de desarrollo de cada iteración.
+
+Repositorio: https://github.com/EthicsAI-UCM/ReJust/tree/main
 
 ```text
 ReJust/
 │
 ├── Sprint_X/
-│   ├──Desarrollo_del_proyecto/
-│   |    ├── Resumen/
-│   |    │  
-│   |    └── Sin_limite/
-    |
-    └──Apéndice
+│   ├── Desarrollo_del_proyecto/
+│   │   ├── Resumen/
+│   │   └── Sin_limite/
+│   │
+│   └── Apéndice/
+│
+└── ...
+```
 
-
-Cada sprint puede contener dos tipos principales de documentación:
+Cada sprint puede contener los siguientes tipos principales de documentación:
 
 | Sección | Contenido |
-|---|---|
+| --- | --- |
 | `Resumen/` | Documento condensado utilizado como entrega principal del sprint. |
 | `Sin_limite/` | Desarrollo extendido del proyecto, argumentos, investigación y material complementario. |
-| Apéndices | Apéndices, referencias, diagramas y material auxiliar asociado al sprint. |
+| `Apéndice/` | Apéndices, referencias, diagramas y material auxiliar asociado al sprint. |
 
 La idea es mantener **cada Sprint autocontenido**, evitando mezclar documentos pertenecientes a iteraciones diferentes del proyecto.
 
@@ -38,11 +41,41 @@ El grupo está formado por:
 
 ## 🧩 Organización del grupo
 
-El proyecto se desarrolla siguiendo una organización basada en **Scrum**. Dentro del equipo se mantienen como mínimo los siguientes roles:
+El proyecto se desarrolla siguiendo una organización basada en **Scrum**, complementada con distintos roles internos para repartir las responsabilidades de coordinación, documentación y gestión del proyecto.
 
-| Rol | Responsabilidad |
-|---|---|
-| **Scrum Master** | Coordinar la metodología Scrum y facilitar el desarrollo de cada sprint. |
-| **Product Owner** | Supervisar que el trabajo realizado responda a los objetivos y requisitos del proyecto. |
-| **Team Advocate** | Favorecer la comunicación, colaboración e integración de todos los integrantes. |
-| **Experto Git** | Apoyar al equipo en el uso de Git/GitHub, resolución de conflictos y organización del repositorio. |
+| Integrante | Rol | Responsabilidad |
+| --- | --- | --- |
+| **Alberto Diez Álvarez** | **SM** | Responsabilidades asociadas al rol de SM dentro de la organización del grupo. |
+| **Pablo Medina Salmón** | **Team Advocate (TA)** | Favorecer la comunicación, colaboración e integración de todos los integrantes del equipo. |
+| **Rodrigo Mendoza García** | **Legal Manager** | Coordinar la investigación y revisión de los aspectos jurídicos y regulatorios del proyecto. |
+| **Andrea Nicolás Romero** | **Presentation Manager** | Coordinar la preparación, estructura y presentación del trabajo y sus entregables. |
+| **Jesús María Rodríguez García** | **Experto Git** | Apoyar al equipo en el uso de Git/GitHub, resolución de conflictos y organización del repositorio. |
+| **Lucas León Siguero** | **Scrum Master** | Coordinar la metodología Scrum, facilitar la planificación del trabajo y supervisar el desarrollo de cada sprint. |
+
+## 🔄 Metodología de trabajo
+
+Al comienzo de cada sprint se realiza una **Sprint Planning**, en la que se definen las tareas, prioridades y responsables.
+
+Durante el desarrollo, el trabajo se organiza y documenta utilizando **GitHub**, permitiendo mantener la trazabilidad de las contribuciones realizadas por cada integrante.
+
+Al finalizar cada sprint se realiza una **Sprint Review** para evaluar el resultado obtenido y una **Sprint Retrospective** para analizar el funcionamiento del equipo e identificar posibles mejoras para la siguiente iteración.
+
+El flujo general de trabajo es:
+
+```text
+Sprint Planning
+      ↓
+Asignación de tareas
+      ↓
+Desarrollo del trabajo
+      ↓
+Commits y seguimiento en GitHub
+      ↓
+Integración de los entregables
+      ↓
+Sprint Review
+      ↓
+Sprint Retrospective
+      ↓
+Siguiente Sprint
+```
