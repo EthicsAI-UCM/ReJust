@@ -1,0 +1,580 @@
+<title>ReJust · Prototipo web</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: barra institucional fija + cuatro vistas (Sentencia, Seguimiento, Defensa, Gobernanza); contenido principal + panel lateral de trazabilidad. */
+:root{
+  --paper:#f4f6f9; --surface:#ffffff; --sunk:#eef1f5; --ink:#14203a; --muted:#56627b; --line:#d9dfe8;
+  --bar:#13203b; --bar-ink:#f3eee4; --bar-muted:#a6b1c6;
+  --gold:#9a6a12; --gold-fill:#e0ad4f; --gold-soft:#f7ecd6;
+  --ok:#2c7d64; --ok-soft:#e1f1eb; --warn:#9b5d0b; --warn-soft:#fbeedb; --crit:#b23f33; --crit-soft:#f8e3e0; --info:#2f5fb8; --info-soft:#e3ebf9;
+  --serif:"Fraunces",Georgia,"DejaVu Serif",serif;
+  --sans:"IBM Plex Sans","Segoe UI","Liberation Sans",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"DejaVu Sans Mono",monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0c1424; --surface:#121d33; --sunk:#0f182b; --ink:#f0ece3; --muted:#9aa7bf; --line:#2a3a5c;
+  --bar:#08101e; --bar-ink:#f3eee4; --bar-muted:#8f9bb3;
+  --gold:#e8b75c; --gold-fill:#e0ad4f; --gold-soft:#2b2618;
+  --ok:#5cc7a6; --ok-soft:#14302a; --warn:#f0b35a; --warn-soft:#33260f; --crit:#f0806f; --crit-soft:#3a1d1a; --info:#86b0ff; --info-soft:#17284a;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0c1424; --surface:#121d33; --sunk:#0f182b; --ink:#f0ece3; --muted:#9aa7bf; --line:#2a3a5c;
+  --bar:#08101e; --bar-ink:#f3eee4; --bar-muted:#8f9bb3;
+  --gold:#e8b75c; --gold-fill:#e0ad4f; --gold-soft:#2b2618;
+  --ok:#5cc7a6; --ok-soft:#14302a; --warn:#f0b35a; --warn-soft:#33260f; --crit:#f0806f; --crit-soft:#3a1d1a; --info:#86b0ff; --info-soft:#17284a;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font:15px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bar)}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1240px;margin:0 auto}
+h1,h2,h3{text-wrap:balance;margin:0}
+h1{font:650 clamp(24px,3vw,32px)/1.15 var(--serif);letter-spacing:-.01em}
+h2{font:650 19px/1.25 var(--serif)}
+h3{font:600 14px/1.3 var(--sans)}
+p{margin:0}
+.eyebrow{font:600 11px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--mono);font-size:12.5px}
+.muted{color:var(--muted)}
+button,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold-fill);outline-offset:2px}
+
+/* Demo strip */
+.demo{background:var(--gold-soft);color:var(--ink);font-size:12.5px;border-bottom:1px solid var(--line)}
+.demo .wrap{padding-block:7px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.demo b{color:var(--gold)}
+
+/* Top bar */
+.bar{background:var(--bar);color:var(--bar-ink);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.bar .wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:10px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.brand svg{width:28px;height:28px}
+.brand b{font:650 21px/1 var(--serif);letter-spacing:.01em}
+.brand span{font-size:11.5px;color:var(--bar-muted);display:block;margin-top:3px}
+nav.tabs{display:flex;gap:2px;flex-wrap:wrap;flex:1 1 auto}
+nav.tabs a{color:var(--bar-muted);text-decoration:none;padding:8px 12px;border-radius:var(--r);font-weight:500;font-size:14px;white-space:nowrap}
+nav.tabs a:hover{color:var(--bar-ink);background:rgba(255,255,255,.06)}
+nav.tabs a[aria-current="page"]{color:var(--bar-ink);background:rgba(224,173,79,.16);box-shadow:inset 0 -2px 0 var(--gold-fill)}
+.who{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--bar-muted)}
+.who select{background:transparent;border:1px solid rgba(255,255,255,.18);color:var(--bar-ink);border-radius:var(--r);padding:4px 6px;font-size:12.5px}
+.who select option{color:#14203a}
+.role{border:1px solid rgba(224,173,79,.45);color:#f4cf86;border-radius:999px;padding:3px 10px;white-space:nowrap}
+
+main{padding-block:28px 64px}
+.view{display:grid;gap:22px}
+.head{display:flex;justify-content:space-between;gap:16px 28px;flex-wrap:wrap;align-items:flex-end}
+.head .meta{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:minmax(0,1fr)}}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.panel>header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line)}
+.panel .body{padding:16px 18px;display:grid;gap:14px}
+
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:500;white-space:nowrap;border:1px solid transparent}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.ok{color:var(--ok);background:var(--ok-soft)}
+.pill.warn{color:var(--warn);background:var(--warn-soft)}
+.pill.crit{color:var(--crit);background:var(--crit-soft)}
+.pill.info{color:var(--info);background:var(--info-soft)}
+.pill.neutral{color:var(--muted);background:var(--sunk);border-color:var(--line)}
+.pill.plain::before{display:none}
+
+/* Controls */
+.controls{display:flex;gap:12px 20px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:7px 14px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.chk{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;cursor:pointer;user-select:none}
+.chk input{accent-color:var(--gold-fill);width:15px;height:15px}
+.notice{display:flex;gap:10px;align-items:flex-start;border-radius:var(--r);padding:10px 14px;font-size:13.5px;border:1px solid}
+.notice svg{flex:none;width:18px;height:18px;margin-top:1px}
+.notice.warn{background:var(--warn-soft);border-color:color-mix(in srgb,var(--warn) 35%,transparent);color:var(--ink)}
+.notice.warn svg{color:var(--warn)}
+.notice.info{background:var(--info-soft);border-color:color-mix(in srgb,var(--info) 30%,transparent)}
+.notice.info svg{color:var(--info)}
+.notice.ok{background:var(--ok-soft);border-color:color-mix(in srgb,var(--ok) 30%,transparent)}
+.notice.ok svg{color:var(--ok)}
+
+/* Núcleo mínimo */
+.layer{display:grid;gap:10px}
+.layer-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.layer-h .n{font:500 12px/1 var(--mono);color:var(--gold);border:1px solid var(--gold);border-radius:4px;padding:3px 5px}
+.items{display:grid;gap:8px}
+.item{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:11px 14px;display:grid;gap:6px;min-width:0}
+.item .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.item .ctx{font-size:13.5px;color:var(--muted)}
+.item .tags{display:flex;gap:6px;flex-wrap:wrap}
+.src-btn{border:0;background:none;padding:0;color:var(--info);font-size:12.5px;cursor:pointer;text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
+.src{border-left:2px solid var(--line);padding:6px 0 6px 12px;font-size:13px;display:grid;gap:4px}
+.src q{font-family:var(--serif);font-size:14px;quotes:"«" "»"}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.two{grid-template-columns:minmax(0,1fr)}}
+.col-h{display:flex;justify-content:space-between;align-items:center;font:600 12px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-bottom:4px;border-bottom:2px solid var(--ink)}
+.synth{background:var(--sunk);border:1px dashed var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:8px}
+.lock{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted)}
+.lock svg{width:14px;height:14px}
+
+/* Side */
+.side{display:grid;gap:16px}
+.kv{display:grid;gap:9px;font-size:13px}
+.kv div{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+dl{margin:0}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:7px;font-size:13px}
+.checks li{display:flex;gap:8px;align-items:flex-start}
+.checks svg{flex:none;width:16px;height:16px;margin-top:2px;color:var(--ok)}
+.never{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:13px}
+.never li{display:flex;gap:8px}
+.never li::before{content:"";flex:none;width:10px;height:2px;background:var(--crit);margin-top:10px}
+
+/* Seguimiento */
+.timeline{position:relative;display:grid;gap:12px;padding-left:22px}
+.timeline::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.rec{position:relative}
+.rec::before{content:"";position:absolute;left:-21px;top:16px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--muted)}
+.rec.src-admin::before{border-color:var(--info)}
+.rec.src-av::before{border-color:var(--gold-fill)}
+.rec.unverified{opacity:.78}
+.rec.unverified .item{border-style:dashed}
+.rec .when{font:500 12px/1 var(--mono);color:var(--muted)}
+.rec .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;font-size:12.5px;border-top:1px solid var(--line);padding-top:9px;margin-top:2px}
+.rec .grid dt{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
+.rec .grid dd{margin:2px 0 0}
+@media (max-width:640px){.rec .grid{grid-template-columns:minmax(0,1fr)}}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;border:2px solid;margin-right:6px;vertical-align:-1px}
+.catalog{display:flex;flex-wrap:wrap;gap:6px}
+.catalog span{font-size:12.5px;border:1px solid var(--line);border-radius:4px;padding:3px 8px;background:var(--sunk)}
+.catalog s{font-size:12.5px;color:var(--muted);padding:3px 8px}
+
+/* Defensa */
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:6px 12px;font-size:13px;font-weight:500;cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.form{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.form label{font-size:12.5px;color:var(--muted);display:grid;gap:4px}
+.form textarea,.form select{width:100%;border:1px solid var(--line);border-radius:var(--r);background:var(--paper);padding:8px 10px;font-size:13.5px}
+.form textarea{min-height:76px;resize:vertical}
+.toast{font-size:13px}
+
+/* Gobernanza */
+.gov{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:860px){.gov{grid-template-columns:minmax(0,1fr)}}
+.actor{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:14px 16px;display:grid;gap:8px;align-content:start}
+.actor .tag{font:500 11px/1 var(--mono);color:var(--gold)}
+.actor ul{margin:0;padding-left:18px;font-size:13.5px;display:grid;gap:3px}
+.actor .no{color:var(--crit);font-size:13px}
+.actor.center{border-color:var(--gold-fill);box-shadow:inset 0 3px 0 var(--gold-fill)}
+.life{display:grid;gap:14px}
+.lrow{display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px 18px;align-items:center}
+@media (max-width:720px){.lrow{grid-template-columns:minmax(0,1fr)}}
+.lrow h3{font-size:13.5px}
+.lrow p{font-size:12.5px;color:var(--muted)}
+.track{position:relative;height:26px;background:var(--sunk);border-radius:4px;border:1px solid var(--line)}
+.track .fill{position:absolute;top:3px;bottom:3px;left:3px;border-radius:3px;display:flex;align-items:center;padding-left:8px;font-size:11.5px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden}
+.track .fill::after{content:"";position:absolute;right:0;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.f-av{background:color-mix(in srgb,var(--gold-fill) 45%,transparent)}
+.f-cr{background:color-mix(in srgb,var(--crit) 30%,transparent)}
+.f-ok{background:color-mix(in srgb,var(--ok) 30%,transparent)}
+.f-zero{background:transparent}
+.axis{display:flex;justify-content:space-between;font:400 11px/1 var(--mono);color:var(--muted);margin-left:238px}
+@media (max-width:720px){.axis{margin-left:0}}
+.resp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:720px){.resp{grid-template-columns:minmax(0,1fr)}}
+.resp .item h3{font-size:14px}
+.resp .item p{font-size:13.5px;color:var(--muted)}
+footer.foot{border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+footer.foot .wrap{padding-block:18px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+@media (prefers-reduced-motion:no-preference){.view{animation:in .25s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-scale" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 5v22M10 27h12M6 9h20M16 5l-1.2 4h2.4z"/><path d="M6 9l-4 9h8zM26 9l-4 9h8z"/><path d="M2 18a4 2.5 0 0 0 8 0M22 18a4 2.5 0 0 0 8 0"/></g></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></g></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></g></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></symbol>
+</svg>
+
+<div class="demo gut"><div class="wrap"><b>Prototipo</b> Todos los expedientes, internos, resoluciones y fechas de esta página son ficticios y sirven solo para ilustrar el diseño tras el apéndice de respuesta al debate del Sprint 2.</div></div>
+
+<header class="bar gut">
+  <div class="wrap">
+    <a class="brand" href="#sentencia"><svg style="color:var(--gold-fill)"><use href="#i-scale"/></svg><div><b>ReJust</b><span>Informar, nunca influir</span></div></a>
+    <nav class="tabs" aria-label="Módulos">
+      <a href="#sentencia" data-v="sentencia">ReJust‑Sentencia</a>
+      <a href="#seguimiento" data-v="seguimiento">ReJust‑Seguimiento</a>
+      <a href="#defensa" data-v="defensa">Vista de la defensa</a>
+      <a href="#gobernanza" data-v="gobernanza">Gobernanza y conservación</a>
+    </nav>
+    <div class="who">
+            <select id="lang" aria-label="Idioma de la interfaz">
+        <option>Castellano</option><option>Català</option><option>Euskara</option><option>Galego</option><option>Valencià</option>
+      </select>
+      <span class="role" id="role">Órgano judicial</span>
+    </div>
+  </div>
+</header>
+
+<main class="gut">
+<div class="wrap">
+
+<!-- ============ SENTENCIA ============ -->
+<section class="view" id="v-sentencia">
+  <div class="head">
+    <div style="display:grid;gap:8px">
+      <span class="eyebrow">Expediente · Juzgado de lo Penal</span>
+      <h1>Procedimiento abreviado 214/2030</h1>
+      <div class="meta"><span>Delito de lesiones · art. 147.1 CP</span><span>Hechos: 12/03/2030</span><span class="mono">Sistema v3.2.1</span></div>
+    </div>
+    <div class="controls">
+      <div><div class="eyebrow" style="margin-bottom:6px">Nivel de detalle</div>
+        <div class="seg" role="group" aria-label="Nivel de detalle" id="levels">
+          <button type="button" data-l="0" aria-pressed="false">Síntesis</button>
+          <button type="button" data-l="1" aria-pressed="true">Estándar</button>
+          <button type="button" data-l="2" aria-pressed="false">Completo</button>
+        </div></div>
+      <div style="display:grid;gap:6px"><div class="eyebrow">Filtros reversibles</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap">
+          <label class="chk"><input type="checkbox" id="f-date"> Ordenar por fecha</label>
+          <label class="chk"><input type="checkbox" id="f-doc"> Solo prueba documental</label>
+        </div></div>
+    </div>
+  </div>
+
+  <div class="notice warn" id="filter-notice" hidden><svg><use href="#i-warn"/></svg><div><b>Filtro activo.</b> <span id="filter-text"></span> Esta vista no representa la totalidad de la información disponible. <button class="src-btn" type="button" id="clear-filters">Quitar filtros</button></div></div>
+
+  <div class="layout">
+    <div class="panel">
+      <header><div><h2>Informe documental</h2><p class="muted" style="font-size:13px">Primero las evidencias y fuentes; la síntesis, al final.</p></div>
+        <span class="pill ok">Núcleo mínimo completo</span></header>
+      <div class="body" style="gap:22px" id="report"></div>
+    </div>
+
+    <aside class="side">
+      <div class="panel">
+        <header><h2>Validación del formato</h2></header>
+        <div class="body">
+          <ul class="checks">
+            <li><svg><use href="#i-check"/></svg>Hechos relevantes del expediente</li>
+            <li><svg><use href="#i-check"/></svg>Pruebas de cargo y de descargo, con idéntica jerarquía visual</li>
+            <li><svg><use href="#i-check"/></svg>Normativa en su versión vigente a 12/03/2030</li>
+            <li><svg><use href="#i-check"/></svg>Precedentes, incluidos los contrarios</li>
+            <li><svg><use href="#i-check"/></svg>Lagunas, contradicciones e incertidumbre</li>
+          </ul>
+          <p style="font-size:12.5px" class="muted">El informe no se emite si falta el bloque de argumentos contrarios (caso 6 de <i>Robustez</i>).</p>
+        </div>
+      </div>
+      <div class="panel">
+        <header><h2>Trazabilidad</h2><span class="pill neutral plain">Por expediente</span></header>
+        <div class="body">
+          <dl class="kv">
+            <div><dt>Versión</dt><dd class="mono">v3.2.1 · 2030‑09‑30</dd></div>
+            <div><dt>Fuentes</dt><dd>BOE (texto consolidado a la fecha de los hechos) y CENDOJ; 9 citas verificadas</dd></div>
+            <div><dt>Custodia</dt><dd>Consejo General del Poder Judicial</dd></div>
+            <div><dt>Proveedor</dt><dd>Ministerio de Justicia, sin acceso al contenido de las consultas</dd></div>
+          </dl>
+          <div class="notice info"><svg><use href="#i-info"/></svg><div>El registro se organiza por expediente, no por usuario. No puede usarse para valorar ni comparar el criterio de jueces concretos.</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <header><h2>Lo que ReJust no hace</h2></header>
+        <div class="body"><ul class="never">
+          <li>Sugerir penas, fallos o calificaciones</li>
+          <li>Generar estimaciones o puntuaciones de riesgo</li>
+          <li>Adaptar la información jurídica al perfil del usuario</li>
+          <li>Cruzar datos con ReJust‑Seguimiento</li>
+        </ul></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ SEGUIMIENTO ============ -->
+<section class="view" id="v-seguimiento" hidden>
+  <div class="head">
+    <div style="display:grid;gap:8px">
+      <span class="eyebrow">Ejecución de la pena · Centro penitenciario</span>
+      <h1>Interno <span class="mono" style="font-size:.7em">NIS 2030‑04471</span></h1>
+      <div class="meta"><span>Segundo grado</span><span>Próxima revisión de clasificación: 14/01/2031</span><span>Órgano decisor: Junta de Tratamiento · JVP</span></div>
+    </div>
+    <div class="legend"><span><i style="border-color:var(--info)"></i>Registro administrativo del centro</span><span><i style="border-color:var(--gold-fill)"></i>Evento audiovisual (catálogo cerrado)</span></div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <header><div><h2>Evolución temporal de registros</h2><p class="muted" style="font-size:13px">Ningún registro aislado tiene relevancia por sí mismo; se contrasta con los informes del equipo técnico.</p></div>
+        <span class="pill neutral plain">Sin puntuación de conducta</span></header>
+      <div class="body"><div class="timeline" id="timeline"></div></div>
+    </div>
+    <aside class="side">
+      <div class="panel">
+        <header><h2>Garantías de esta vista</h2></header>
+        <div class="body"><ul class="checks">
+          <li><svg><use href="#i-check"/></svg>La ausencia de registros favorables no es un indicio desfavorable.</li>
+          <li><svg><use href="#i-check"/></svg>Un registro no contrastable no puede fundar por sí solo una decisión desfavorable.</li>
+          <li><svg><use href="#i-check"/></svg>Los registros no verificados no se pueden usar en ninguna decisión.</li>
+          <li><svg><use href="#i-check"/></svg>Se describe lo observable; no se infieren intenciones (caso 9 de <i>Robustez</i>).</li>
+          <li><svg><use href="#i-check"/></svg>Nada de esta vista se transfiere a ReJust‑Sentencia.</li>
+        </ul></div>
+      </div>
+      <div class="panel">
+        <header><h2>Catálogo de eventos</h2><span class="pill neutral plain">Cerrado</span></header>
+        <div class="body">
+          <div class="catalog"><span>Caída</span><span>Contacto físico</span><span>Permanencia en zona determinada</span><span>Aglomeración</span><span>Acceso a zona restringida</span></div>
+          <div class="catalog"><s>Conducta agresiva</s><s>Actitud colaboradora</s></div>
+          <p class="muted" style="font-size:12.5px">Excluidas las categorías interpretativas. Las conductas favorables documentadas (talleres, destinos, actividades educativas) proceden de los registros del centro, no del vídeo.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <header><h2>Pose y biometría</h2></header>
+        <div class="body"><p style="font-size:13.5px">Los puntos corporales se tratan como datos potencialmente biométricos y se suprimen al clasificar el evento. No se usan para identificar a nadie: la identificación la hace un profesional sobre la grabación original preservada.</p></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ DEFENSA ============ -->
+<section class="view" id="v-defensa" hidden>
+  <div class="head">
+    <div style="display:grid;gap:8px">
+      <span class="eyebrow">Acceso del interno y su defensa · Anexo IV</span>
+      <h1>Registros que afectan al interno <span class="mono" style="font-size:.7em">NIS 2030‑04471</span></h1>
+      <div class="meta"><span>Consulta, rectificación e impugnación</span><span>Acceso al original con motivo autorizado (art. 24 CE)</span></div>
+    </div>
+  </div>
+  <div class="notice info"><svg><use href="#i-info"/></svg><div>Impugnar un registro desfavorable mientras la grabación todavía existe la preserva durante el procedimiento. Las solicitudes de esta página son una simulación y no se envían a ningún sitio.</div></div>
+  <div class="items" id="defense"></div>
+</section>
+
+<!-- ============ GOBERNANZA ============ -->
+<section class="view" id="v-gobernanza" hidden>
+  <div class="head">
+    <div style="display:grid;gap:8px">
+      <span class="eyebrow">Transparencia pública</span>
+      <h1>Quién gobierna ReJust y cuánto se conserva cada dato</h1>
+      <div class="meta"><span>Reglamento (UE) 2024/1689 · alto riesgo, Anexo III puntos 6 y 8.a</span><span>Sin excepción del art. 6.3</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <header><h2>Separación de funciones</h2><span class="pill neutral plain">Arts. 117 y 122 CE</span></header>
+    <div class="body">
+      <div class="gov">
+        <div class="actor"><span class="tag">PROVEEDOR</span><h3>Ministerio de Justicia</h3>
+          <ul><li>Desarrolla, mantiene y actualiza el sistema</li><li>Responde de errores sistemáticos y de las obligaciones del art. 15 RIA</li></ul>
+          <p class="no">Sin acceso a consultas ni registros de uso jurisdiccional</p></div>
+        <div class="actor center"><span class="tag">GOBIERNO DEL USO JURISDICCIONAL</span><h3>Consejo General del Poder Judicial</h3>
+          <ul><li>Custodia los registros de uso de ReJust‑Sentencia</li><li>Acceso individualizado solo por incidente técnico o procedimiento legal, siempre documentado</li><li>Informe anual sobre datos agregados y seudonimizados</li></ul>
+          <p class="muted" style="font-size:12.5px">Instrucción 2/2026 del Pleno del CGPJ</p></div>
+        <div class="actor"><span class="tag">RESPONSABLE DEL TRATAMIENTO</span><h3>Administración penitenciaria</h3>
+          <ul><li>Exactitud de los datos (LO 7/2021)</li><li>Atiende rectificación y supresión</li><li>Responsabilidad patrimonial (art. 106.2 CE)</li></ul></div>
+        <div class="actor"><span class="tag">DECISIÓN</span><h3>Junta de Tratamiento · Juez de Vigilancia Penitenciaria · Órgano judicial</h3>
+          <ul><li>Responde de la decisión y de su motivación</li><li>No puede fundar una decisión desfavorable solo en un registro no contrastable</li></ul></div>
+        <div class="actor"><span class="tag">VERIFICACIÓN</span><h3>Profesional verificador</h3>
+          <ul><li>Responde de cada verificación</li><li>Queda constancia de autor, fecha, fragmento revisado y motivo del acceso</li></ul></div>
+        <div class="actor"><span class="tag">EVALUACIÓN INDEPENDIENTE</span><h3>Sociedad civil y MNPT</h3>
+          <ul><li>Evalúan el piloto: sesgos, trazabilidad y derechos</li><li>El MNPT valora si el sistema altera la conducta en espacios comunes</li></ul>
+          <p class="muted" style="font-size:12.5px">Si no supera las garantías del trabajo humano, se retira.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <header><div><h2>Política de conservación</h2><p class="muted" style="font-size:13px">Ningún registro se conserva de forma indefinida, sea favorable o desfavorable.</p></div><span class="pill neutral plain">LO 7/2021, art. 8</span></header>
+    <div class="body">
+      <div class="life" id="life"></div>
+      <div class="axis" aria-hidden="true"><span>Captación</span><span>30 días</span><span>Revisión (≤ 6 meses)</span><span>Cancelación de sanción</span><span>Libertad definitiva</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <header><h2>Protocolo ante error sistemático</h2><span class="pill neutral plain">Anexo II, apartado 6</span></header>
+    <div class="body">
+      <div class="resp">
+        <div class="item"><h3>1. Suspensión</h3><p>Se suspende la función afectada. Si una diferencia de rendimiento injustificada no se puede corregir, la función audiovisual se suspende.</p></div>
+        <div class="item"><h3>2. Identificación</h3><p>Se localizan las decisiones en las que pudo influir el error.</p></div>
+        <div class="item"><h3>3. Comunicación</h3><p>Se comunica a los órganos competentes para su eventual revisión.</p></div>
+        <div class="item"><h3>4. Medición desagregada</h3><p>Omisiones y falsos positivos por condiciones de grabación y grupos de personas, con atención a la movilidad reducida.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+</main>
+
+<footer class="foot gut"><div class="wrap"><span>ReJust · Ética de Datos y de IA · Facultad de Informática · UCM</span><span>Prototipo conforme al Apéndice de respuesta al debate del Sprint 2 (octubre de 2026)</span></div></footer>
+
+<script>
+(function(){
+  /* ---------- Sentencia ---------- */
+  // Cada elemento tiene síntesis, contexto y pasaje de origen. doc = prueba documental.
+  const R = {
+    hechos:[
+      {d:"2030-03-12",s:"Agresión en la terraza de un bar tras una discusión; la víctima sufre fractura del tabique nasal.",c:"Sucede hacia las 23:40. Intervienen cuatro personas; dos declaran como testigos.",src:["Atestado 1187/2030, folio 3","«Los agentes son requeridos a las 23:47 por una riña en la vía pública…»"]},
+      {d:"2030-03-13",s:"La víctima recibe asistencia sanitaria y tratamiento quirúrgico posterior.",c:"El tratamiento quirúrgico es relevante para la tipicidad del art. 147.1 CP.",src:["Parte de lesiones, Hospital Universitario, 13/03/2030","«Fractura de huesos propios nasales que requiere reducción quirúrgica…»"]}
+    ],
+    cargo:[
+      {d:"2030-03-13",doc:true,s:"Informe médico forense: lesiones compatibles con un puñetazo.",c:"Sanidad en 45 días, 10 de ellos impeditivos.",src:["Informe forense 552/2030, p. 2","«Mecanismo lesivo compatible con impacto directo de objeto romo, como un puño…»"]},
+      {d:"2030-03-12",doc:false,s:"Testigo 1 identifica al acusado como autor del golpe.",c:"Lo declara en sede policial y lo ratifica en instrucción.",src:["Declaración testifical, folio 41","«Vi perfectamente cómo le daba un puñetazo en la cara…»"]}
+    ],
+    descargo:[
+      {d:"2030-03-12",doc:true,s:"Grabación de un establecimiento cercano: el acusado es empujado antes del golpe.",c:"La imagen es parcial; el momento del impacto queda fuera de plano.",src:["Pieza audiovisual 2, minuto 02:14","Descripción de la pieza: secuencia de 9 s; el acusado retrocede tras un empujón."]},
+      {d:"2030-03-14",doc:false,s:"Testigo 2 sitúa el origen de la agresión en la víctima.",c:"Es amigo del acusado; su declaración debe valorarse con esa circunstancia.",src:["Declaración testifical, folio 58","«Fue él quien empezó, le empujó dos veces antes…»"]}
+    ],
+    normas:[
+      {s:"Art. 147.1 del Código Penal, versión vigente a 12/03/2030.",c:"Exige tratamiento médico o quirúrgico además de la primera asistencia.",src:["BOE · texto consolidado a la fecha de los hechos","Cita verificada contra el texto consolidado."]},
+      {s:"Art. 20.4 CP (legítima defensa) y art. 21.1 CP (eximente incompleta).",c:"Relevante si se acredita una agresión ilegítima previa.",src:["BOE · texto consolidado a la fecha de los hechos","Cita verificada contra el texto consolidado."]}
+    ],
+    prec:[
+      {fav:"cargo",s:"Precedente A: el empujón previo no excluye la desproporción del medio empleado.",c:"Supuesto de hecho análogo, con lesión facial grave.",src:["CENDOJ · resolución ficticia de ejemplo","Fundamento jurídico tercero."]},
+      {fav:"descargo",s:"Precedente B (contrario): se aprecia eximente incompleta tras agresión previa acreditada en vídeo.",c:"Se mostró aunque contradice el precedente A.",src:["CENDOJ · resolución ficticia de ejemplo","Fundamento jurídico segundo."]}
+    ],
+    gaps:[
+      {k:"Laguna",s:"El impacto no consta en ninguna grabación.",c:"No hay prueba directa visual del golpe."},
+      {k:"Contradicción",s:"Los testigos 1 y 2 dan versiones incompatibles sobre quién inicia el altercado.",c:"Ambas constan íntegras en el informe."},
+      {k:"Incertidumbre",s:"La existencia de una agresión ilegítima previa no puede afirmarse ni descartarse con la documentación disponible.",c:"El sistema se abstiene de valorar su suficiencia."}
+    ]
+  };
+  let level=1, byDate=false, onlyDoc=false;
+  const esc=t=>t.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  let uid=0;
+  function item(x,tags){
+    const id="src"+(uid++);
+    const open=level===2;
+    return `<div class="item"><div class="top"><div>${esc(x.s)}</div>${x.src?`<button class="src-btn" type="button" aria-expanded="${open}" aria-controls="${id}">${open?"Ocultar fuente":"Ver fuente"}</button>`:""}</div>
+      ${level>=1&&x.c?`<div class="ctx">${esc(x.c)}</div>`:""}
+      ${tags?`<div class="tags">${tags}</div>`:""}
+      ${x.src?`<div class="src" id="${id}" ${open?"":"hidden"}><span class="mono muted">${esc(x.src[0])}</span><q>${esc(x.src[1].replace(/^«|»$/g,""))}</q></div>`:""}</div>`;
+  }
+  const sort=a=>byDate?[...a].sort((p,q)=>(p.d||"").localeCompare(q.d||"")):a;
+  const filt=a=>onlyDoc?a.filter(x=>x.doc):a;
+  function layer(n,title,note,html){return `<section class="layer"><div class="layer-h"><span class="n">${n}</span><h2>${title}</h2>${note?`<span class="muted" style="font-size:12.5px">${note}</span>`:""}</div>${html}</section>`}
+  function renderReport(){
+    uid=0;
+    const tagDoc=x=>`<span class="pill neutral plain">${x.doc?"Documental":"Testifical"}</span>`;
+    const col=(name,arr)=>`<div class="items" style="align-content:start"><div class="col-h"><span>${name}</span><span class="mono">${arr.length}</span></div>${arr.map(x=>item(x,tagDoc(x))).join("")||'<p class="muted" style="font-size:13px">Ningún elemento con el filtro actual.</p>'}</div>`;
+    const html=[
+      layer("1","Hechos relevantes","",`<div class="items">${sort(R.hechos).map(x=>item(x)).join("")}</div>`),
+      layer("2","Pruebas de cargo y de descargo","Idéntica jerarquía visual",`<div class="two">${col("Cargo",sort(filt(R.cargo)))}${col("Descargo",sort(filt(R.descargo)))}</div>`),
+      layer("3","Normativa aplicable","Versión vigente a la fecha de los hechos",`<div class="items">${R.normas.map(x=>item(x,'<span class="pill ok">Cita verificada</span>')).join("")}</div>`),
+      layer("4","Precedentes relevantes","Incluidos los contrarios",`<div class="items">${R.prec.map(x=>item(x,`<span class="pill neutral plain">Apoya la posición de ${x.fav}</span>`)).join("")}</div>`),
+      layer("5","Lagunas, contradicciones e incertidumbre","",`<div class="items">${R.gaps.map(x=>item(x,`<span class="pill warn">${x.k}</span>`)).join("")}</div>`),
+      `<div class="synth"><div class="layer-h"><span class="eyebrow">Síntesis, solo al final</span></div><p>Constan pruebas de cargo y de descargo sobre la autoría y sobre una posible agresión previa. La valoración de la prueba y la calificación jurídica corresponden en exclusiva al órgano judicial.</p><div class="lock"><svg><use href="#i-lock"/></svg>Bloqueado por diseño: sin propuesta de pena, fallo ni calificación.</div></div>`
+    ].join("");
+    document.getElementById("report").innerHTML=html;
+    const parts=[]; if(byDate)parts.push("Ordenado por fecha."); if(onlyDoc)parts.push("Solo se muestra la prueba documental.");
+    document.getElementById("filter-notice").hidden=!parts.length;
+    document.getElementById("filter-text").textContent=parts.join(" ");
+  }
+  document.getElementById("report").addEventListener("click",e=>{
+    const b=e.target.closest(".src-btn"); if(!b)return;
+    const el=document.getElementById(b.getAttribute("aria-controls"));
+    el.hidden=!el.hidden; b.setAttribute("aria-expanded",String(!el.hidden)); b.textContent=el.hidden?"Ver fuente":"Ocultar fuente";
+  });
+  document.getElementById("levels").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b)return; level=+b.dataset.l;
+    document.querySelectorAll("#levels button").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); renderReport();
+  });
+  const fd=document.getElementById("f-date"), fo=document.getElementById("f-doc");
+  fd.addEventListener("change",()=>{byDate=fd.checked;renderReport()});
+  fo.addEventListener("change",()=>{onlyDoc=fo.checked;renderReport()});
+  document.getElementById("clear-filters").addEventListener("click",()=>{fd.checked=fo.checked=false;byDate=onlyDoc=false;renderReport()});
+
+  /* ---------- Seguimiento y defensa ---------- */
+  const SUP={disponible:["info","Original disponible"],preservado:["ok","Original preservado"],suprimido:["neutral","Original suprimido"]};
+  const recs=[
+    {id:"R-0611",when:"18/10/2030",kind:"av",ev:"Acceso a zona restringida",val:"desfavorable",ver:"Verificado · Prof. V‑118 · 19/10/2030",sup:"disponible",until:"Siguiente revisión de clasificación (14/01/2031), máximo seis meses",note:"La grabación se suprime el 17/11/2030 salvo impugnación o uso en una decisión."},
+    {id:"R-0598",when:"07/10/2030",kind:"av",ev:"Permanencia en zona determinada",val:"sin valorar",ver:"Pendiente de verificación",sup:"disponible",until:"Se suprime con la grabación (06/11/2030)",unv:true,note:"No utilizable en ninguna decisión mientras no lo verifique un profesional."},
+    {id:"R-0543",when:"14/09/2030",kind:"av",ev:"Contacto físico",val:"desfavorable",ver:"Verificado · Prof. V‑104 · 15/09/2030",sup:"preservado",until:"Hasta la cancelación de la sanción (art. 260 RP)",note:"Vinculado al expediente disciplinario 88/2030. Fragmento preservado mientras dure el procedimiento."},
+    {id:"R-0470",when:"02/08/2030",kind:"av",ev:"Contacto físico",val:"desfavorable",ver:"Verificado · Prof. V‑118 · 03/08/2030",sup:"suprimido",until:"Siguiente revisión de clasificación, máximo seis meses",nc:true,note:"Sin sanción asociada."},
+    {id:"R-0402",when:"03/2030 – 06/2030",kind:"admin",ev:"Asistencia a taller de carpintería · 46 de 48 sesiones",val:"favorable",ver:"Registro administrativo del centro",sup:null,until:"Durante la condena en curso; se revisa en cada clasificación y se suprime con la libertad definitiva"}
+  ];
+  function supPill(r){if(!r.sup)return '<span class="pill neutral plain">Fuente documental</span>';const s=SUP[r.sup];return `<span class="pill ${s[0]}">${s[1]}</span>`}
+  function valPill(r){return r.val==="favorable"?'<span class="pill neutral plain">Favorable</span>':r.val==="desfavorable"?'<span class="pill neutral plain">Desfavorable</span>':'<span class="pill neutral plain">Sin valorar</span>'}
+  function renderTimeline(){
+    document.getElementById("timeline").innerHTML=recs.map(r=>`<div class="rec ${r.kind==="admin"?"src-admin":"src-av"} ${r.unv?"unverified":""}"><div class="item">
+      <div class="top"><div style="display:grid;gap:5px"><span class="when">${r.when} · ${r.id}</span><h3>${esc(r.ev)}</h3></div><div class="tags" style="justify-content:flex-end">${r.unv?'<span class="pill warn">No verificado</span>':""}${r.nc?'<span class="pill crit">No contrastable</span>':""}${supPill(r)}</div></div>
+      ${r.note?`<div class="ctx">${esc(r.note)}</div>`:""}
+      <dl class="grid"><div><dt>Naturaleza</dt><dd>${valPill(r)}</dd></div><div><dt>Verificación</dt><dd>${esc(r.ver)}</dd></div><div><dt>Se conserva</dt><dd>${esc(r.until)}</dd></div></dl>
+      ${r.nc?'<div class="notice warn" style="margin-top:4px"><svg><use href="#i-warn"/></svg><div>El soporte original fue suprimido. Este registro no puede fundar por sí solo una decisión desfavorable.</div></div>':""}
+    </div></div>`).join("");
+  }
+  function renderDefense(){
+    document.getElementById("defense").innerHTML=recs.map((r,i)=>{
+      const canImp=r.val==="desfavorable"&&r.sup==="disponible";
+      return `<div class="item" data-i="${i}">
+        <div class="top"><div style="display:grid;gap:5px"><span class="when mono muted">${r.when} · ${r.id}</span><h3>${esc(r.ev)}</h3></div><div class="tags" style="justify-content:flex-end">${r.unv?'<span class="pill warn">No verificado</span>':""}${r.nc?'<span class="pill crit">No contrastable</span>':""}${supPill(r)}</div></div>
+        <div class="ctx">${valPill(r)} · Se conserva: ${esc(r.until)}</div>
+        <div class="actions">
+          <button class="btn" type="button" data-a="rect">Solicitar rectificación</button>
+          <button class="btn" type="button" data-a="sup">Solicitar supresión</button>
+          ${r.val==="desfavorable"?`<button class="btn ${canImp?"primary":""}" type="button" data-a="imp">Impugnar${canImp?" y preservar original":""}</button>`:""}
+          ${r.sup&&r.sup!=="suprimido"?'<button class="btn" type="button" data-a="acc">Solicitar acceso al original</button>':""}
+        </div>
+        <div class="slot"></div>
+      </div>`}).join("");
+  }
+  const LBL={rect:"Solicitud de rectificación",sup:"Solicitud de supresión",imp:"Impugnación",acc:"Solicitud de acceso al original"};
+  document.getElementById("defense").addEventListener("click",e=>{
+    const b=e.target.closest("button[data-a]");
+    const card=e.target.closest(".item[data-i]"); if(!card)return;
+    const i=+card.dataset.i, slot=card.querySelector(".slot");
+    if(b){
+      const a=b.dataset.a;
+      slot.innerHTML=`<form class="form" data-a="${a}"><b style="font-size:13.5px">${LBL[a]} · ${recs[i].id}</b>
+        ${a==="acc"?`<label for="mot${i}">Motivo autorizado<select id="mot${i}"><option>Ejercicio del derecho de defensa</option><option>Procedimiento disciplinario en curso</option><option>Queja ante el Juez de Vigilancia Penitenciaria</option></select></label>`:""}
+        <label for="txt${i}">Motivo de la solicitud<textarea id="txt${i}" required>${a==="imp"?"El interno no accedió a la zona; se encontraba esperando turno en la enfermería.":""}</textarea></label>
+        <div class="actions"><button class="btn primary" type="submit">Registrar solicitud</button><button class="btn" type="button" data-cancel>Cancelar</button></div></form>`;
+      return;
+    }
+    if(e.target.closest("[data-cancel]"))slot.innerHTML="";
+  });
+  document.getElementById("defense").addEventListener("submit",e=>{
+    e.preventDefault();
+    const f=e.target, card=f.closest(".item"), i=+card.dataset.i, a=f.dataset.a;
+    let msg=`${LBL[a]} registrada (simulación). La Administración penitenciaria debe responder en el plazo legal.`;
+    if(a==="imp"&&recs[i].sup==="disponible"){recs[i].sup="preservado";recs[i].until="Mientras dure la impugnación";recs[i].note="Impugnado por el interno. La grabación original queda preservada.";msg="Impugnación registrada (simulación). La grabación original queda preservada mientras dure el procedimiento.";}
+    renderDefense(); renderTimeline();
+    const nc=document.querySelector(`#defense .item[data-i="${i}"] .slot`);
+    nc.innerHTML=`<div class="notice ok toast"><svg><use href="#i-check"/></svg><div>${msg}</div></div>`;
+  });
+
+  /* ---------- Conservación ---------- */
+  // Escala cualitativa: 0 = captación, 100 = libertad definitiva.
+  const life=[
+    ["Puntos corporales","Se suprimen al clasificar el evento",0,"f-zero","No se almacenan"],
+    ["Registros no verificados","Se suprimen con su grabación",24,"f-av","≤ 30 días"],
+    ["Grabación original","Instrucción 4/2022 de la SGIP",24,"f-av","30 días"],
+    ["Desfavorable sin sanción","Hasta la siguiente revisión (art. 105 RP)",48,"f-cr","≤ 6 meses"],
+    ["Desfavorable con sanción","Hasta la cancelación (art. 260 RP)",72,"f-cr","Cancelación"],
+    ["Fragmento preservado","Mientras dure el procedimiento o la impugnación",60,"f-av","Procedimiento"],
+    ["Favorable verificado","Revisión en cada clasificación",97,"f-ok","Libertad definitiva"]
+  ];
+  document.getElementById("life").innerHTML=life.map(l=>`<div class="lrow"><div><h3>${l[0]}</h3><p>${l[1]}</p></div><div class="track" role="img" aria-label="${l[0]}: ${l[4]}"><div class="fill ${l[3]}" style="width:calc(${Math.max(l[2],1.2)}% - 3px)">${l[2]>=20?l[4]:""}</div>${l[2]<20?`<span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:11.5px;font-weight:500">${l[4]}</span>`:""}</div></div>`).join("");
+
+  /* ---------- Navegación ---------- */
+  const views=["sentencia","seguimiento","defensa","gobernanza"];
+  const roles={sentencia:"Órgano judicial",seguimiento:"Junta de Tratamiento",defensa:"Interno y defensa",gobernanza:"Acceso público"};
+  function show(v){
+    if(!views.includes(v))v="sentencia";
+    views.forEach(x=>document.getElementById("v-"+x).hidden=x!==v);
+    document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.v===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+    document.getElementById("role").textContent=roles[v];
+  }
+  document.querySelectorAll("nav.tabs a").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();show(a.dataset.v);try{history.replaceState(null,"","#"+a.dataset.v)}catch(_){}window.scrollTo(0,0)}));
+  document.querySelector(".brand").addEventListener("click",e=>{e.preventDefault();show("sentencia")});
+  renderReport(); renderTimeline(); renderDefense();
+  show((location.hash||"").slice(1));
+})();
+</script>
